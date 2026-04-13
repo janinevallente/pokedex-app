@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { Search } from '@lucide/vue'
 import { ALL_TYPES, GENERATIONS } from '~/types/pokemon'
 import type { PokemonSummary } from '~/types/pokemon'
 import { usePokemonList } from '~/composables/usePokemonList'
+import LogoImg from '~/assets/images/logo.png'
 
-useHead({ title: 'Pokédex — Modern' })
+useHead({ title: 'Pokédex' })
 
 const generation = ref(1)
 const search = ref('')
@@ -74,8 +76,8 @@ const subtitleText = computed(() =>
         <div class="header-top">
           <!-- Logo -->
           <div class="logo">
-            <div class="logo-ball">
-              <div class="logo-ball-inner" />
+            <div>
+              <img class="logo-img" :src="LogoImg"/>
             </div>
             <div>
               <div class="logo-name">Pokédex</div>
@@ -85,7 +87,7 @@ const subtitleText = computed(() =>
 
           <!-- Search -->
           <div class="search-wrapper">
-            <span class="search-icon">🔍</span>
+            <span class="search-icon"><Search :size="20" color="#d02b45" /></span>
             <input
               v-model="search"
               type="text"
