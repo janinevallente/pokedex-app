@@ -4,6 +4,7 @@ import { usePokemonDetail } from '~/composables/usePokemonDetail'
 
 const props = defineProps<{
   pokemonId: number | null
+  isFirst?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -67,7 +68,7 @@ const spriteStyle = computed(() => ({
 // Keyboard navigation
 const handleKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape') emit('close')
-  if (e.key === 'ArrowLeft') emit('prev')
+  if (e.key === 'ArrowLeft' && !props.isFirst) emit('prev')
   if (e.key === 'ArrowRight') emit('next')
 }
 
@@ -92,19 +93,17 @@ const infoItems = computed(() => [
       <div class="modal-panel" :style="panelStyle">
         <!-- Hero header -->
         <div class="modal-hero" :style="heroStyle">
-          <div class="modal-nav">
-            <button class="modal-nav-btn" @click="emit('prev')">←</button>
 
-            <div v-if="detail" class="modal-title-area">
+          <!-- Pokémon name & ID -->
+          <div class="modal-title-area">
+            <template v-if="detail">
               <div class="modal-id">#{{ padId(pokemonId) }}</div>
               <div class="modal-name">{{ detail.name.replace(/-/g, ' ') }}</div>
               <div v-if="genus" class="modal-genus">{{ genus }}</div>
-            </div>
-            <div v-else class="modal-title-area">
+            </template>
+            <template v-else>
               <div class="modal-id">#{{ padId(pokemonId) }}</div>
-            </div>
-
-            <button class="modal-nav-btn" @click="emit('next')">→</button>
+            </template>
           </div>
 
           <!-- Loader -->
@@ -117,6 +116,22 @@ const infoItems = computed(() => [
           <template v-else-if="detail">
             <!-- Sprite -->
             <div class="modal-sprite-wrapper">
+
+              <!--Left Arrow-->
+              <button
+                v-if="!isFirst"
+                class="modal-edge-btn modal-edge-btn--left"
+                title="Previous"
+                @click="emit('prev')"
+              >←</button>
+
+              <!--Right Arrow-->
+              <button
+                class="modal-edge-btn modal-edge-btn--right"
+                title="Next"
+                @click="emit('next')"
+              >→</button>
+
               <img
                 v-if="sprite"
                 :src="sprite"
@@ -126,7 +141,7 @@ const infoItems = computed(() => [
               />
             </div>
 
-            <!-- Types + badges -->
+            <!-- Types + legendary badges -->
             <div class="modal-type-row">
               <span
                 v-for="t in detail.types"

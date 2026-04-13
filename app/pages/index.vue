@@ -196,6 +196,7 @@ const subtitleText = computed(() =>
     <!-- Modal -->
     <PokemonModal
       :pokemon-id="selectedId"
+      :is-first="selectedIndex === 0"
       @close="selectedId = null"
       @prev="selectPrev"
       @next="selectNext"
