@@ -187,6 +187,9 @@ const subtitleText = computed(() =>
     <!-- Footer -->
     <footer class="site-footer">
       <p>
+        Developed by J9
+      </p>
+      <p>
         Data from
         <a href="https://pokeapi.co" target="_blank" rel="noopener noreferrer">PokéAPI</a>
         · Not affiliated with Nintendo or The Pokémon Company
