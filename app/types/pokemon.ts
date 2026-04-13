@@ -74,6 +74,14 @@ export const TYPE_HEX: Record<string, string> = {
 
 export const GENERATIONS = [
   { num: 1, label: 'Gen I', sub: 'Kanto', offset: 0, limit: 151 },
+  { num: 2, label: 'Gen II', sub: 'Johto', offset: 151, limit: 100 },
+  { num: 3, label: 'Gen III', sub: 'Hoenn', offset: 251, limit: 135 },
+  { num: 4, label: 'Gen IV', sub: 'Sinnoh', offset: 386, limit: 107 },
+  { num: 5, label: 'Gen V', sub: 'Unova', offset: 493, limit: 156 },
+  { num: 6, label: 'Gen VI', sub: 'Kalos', offset: 649, limit: 72 },
+  { num: 7, label: 'Gen VII', sub: 'Alola', offset: 721, limit: 88 },
+  { num: 8, label: 'Gen VIII', sub: 'Galar', offset: 809, limit: 96 },
+  { num: 9, label: 'Gen IX', sub: 'Paldea', offset: 905, limit: 120 },
 ]
 
 export function padId(id: number): string {
