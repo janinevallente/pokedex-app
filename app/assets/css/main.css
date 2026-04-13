@@ -785,7 +785,6 @@ body>* {
   display: flex;
   justify-content: center;
   position: relative;
-  cursor: pointer;
 }
 
 .modal-sprite {
@@ -793,10 +792,6 @@ body>* {
   height: 160px;
   object-fit: contain;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.modal-sprite:hover {
-  transform: scale(1.08) translateY(-4px);
 }
 
 .modal-sprite-hint {
@@ -846,7 +841,8 @@ body>* {
 
 /* ---- Tab nav ---- */
 .modal-tabs {
-  padding: 0 16px;
+  /*--Top, Right, Bottom, Left--*/
+  padding: 5px 16px;
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--border);

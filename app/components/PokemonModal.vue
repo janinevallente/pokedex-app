@@ -116,7 +116,7 @@ const infoItems = computed(() => [
 
           <template v-else-if="detail">
             <!-- Sprite -->
-            <div class="modal-sprite-wrapper" @click="showBack = !showBack">
+            <div class="modal-sprite-wrapper">
               <img
                 v-if="sprite"
                 :src="sprite"
@@ -124,10 +124,6 @@ const infoItems = computed(() => [
                 class="modal-sprite"
                 :style="spriteStyle"
               />
-              <div v-else class="sprite-placeholder" style="width:160px;height:160px;font-size:48px">?</div>
-              <div class="modal-sprite-hint">
-                {{ showBack ? 'back' : 'front' }} · click to flip
-              </div>
             </div>
 
             <!-- Types + badges -->
@@ -164,7 +160,12 @@ const infoItems = computed(() => [
             <div class="info-grid">
               <div v-for="item in infoItems" :key="item.label" class="info-cell">
                 <div class="info-cell-label">{{ item.label }}</div>
-                <div class="info-cell-value">{{ item.value }}</div>
+                <div v-if="item.label !== 'Catch Rate'" class="info-cell-value">
+                  {{ item.value }}
+                </div>
+                <div v-if="item.label === 'Catch Rate'" class="info-cell-value">
+                  {{ item.value }} %
+                </div>
               </div>
             </div>
 
