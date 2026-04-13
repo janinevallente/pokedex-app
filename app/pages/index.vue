@@ -91,7 +91,7 @@ const subtitleText = computed(() =>
             <input
               v-model="search"
               type="text"
-              placeholder="Search name or number…"
+              placeholder="Search pokemon name..."
               class="search-input"
             />
           </div>
