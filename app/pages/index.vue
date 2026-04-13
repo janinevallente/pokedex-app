@@ -5,7 +5,7 @@ import type { PokemonSummary } from '~/types/pokemon'
 import { usePokemonList } from '~/composables/usePokemonList'
 import LogoImg from '~/assets/images/logo.png'
 
-useHead({ title: 'Pokédex' })
+useHead({ title: 'Pokédex Hub' })
 
 const generation = ref(1)
 const search = ref('')
@@ -80,7 +80,7 @@ const subtitleText = computed(() =>
               <img class="logo-img" :src="LogoImg"/>
             </div>
             <div>
-              <div class="logo-name">Pokédex</div>
+              <div class="logo-name">Pokédex Hub</div>
               <div class="logo-subtitle">{{ subtitleText }}</div>
             </div>
           </div>
