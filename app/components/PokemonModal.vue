@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { TYPE_HEX, padId, getTypeEffectiveness } from '~/types/pokemon'
 import { usePokemonDetail } from '~/composables/usePokemonDetail'
+import { Shield, TriangleAlert } from '@lucide/vue'
 
 const props = defineProps<{
   pokemonId: number | null
@@ -207,7 +208,7 @@ const infoItems = computed(() => [
                 class="effectiveness-section"
               >
                 <div class="effectiveness-label strong-label">
-                  <span class="eff-icon">🛡</span> Strong against
+                  <Shield :size="15" color="#56c0a9" /> Strong against
                 </div>
                 <div class="effectiveness-types">
                   <span
@@ -234,7 +235,7 @@ const infoItems = computed(() => [
                 class="effectiveness-section"
               >
                 <div class="effectiveness-label weak-label">
-                  <span class="eff-icon">⚠</span> Weak Against
+                  <TriangleAlert :size="15" color="#ff6b6b"/> Weak Against
                 </div>
                 <div class="effectiveness-types">
                   <span

@@ -1242,10 +1242,6 @@ body>* {
   color: #56c0a9;
 }
 
-.eff-icon {
-  font-size: 14px;
-}
-
 .effectiveness-types {
   display: flex;
   flex-wrap: wrap;
