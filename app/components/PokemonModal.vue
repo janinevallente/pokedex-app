@@ -6,6 +6,7 @@ import { Shield, TriangleAlert, Volume2 } from '@lucide/vue'
 const props = defineProps<{
   pokemonId: number | null
   isFirst?: boolean
+  isLast?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -130,7 +131,7 @@ const spriteStyle = computed(() => ({
 const handleKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape') emit('close')
   if (e.key === 'ArrowLeft' && !props.isFirst) emit('prev')
-  if (e.key === 'ArrowRight') emit('next')
+  if (e.key === 'ArrowRight' && !props.isLast) emit('next') 
 }
 
 onMounted(() => window.addEventListener('keydown', handleKey))
@@ -198,6 +199,7 @@ const infoItems = computed(() => [
               >←</button>
 
               <button
+                v-if="!isLast"
                 class="modal-edge-btn modal-edge-btn--right"
                 title="Next"
                 @click="emit('next')"

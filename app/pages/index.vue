@@ -200,6 +200,7 @@ const subtitleText = computed(() =>
     <PokemonModal
       :pokemon-id="selectedId"
       :is-first="selectedIndex === 0"
+      :is-last="selectedIndex === filtered?.length - 1"
       @close="selectedId = null"
       @prev="selectPrev"
       @next="selectNext"
