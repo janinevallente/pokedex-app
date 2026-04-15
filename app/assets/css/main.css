@@ -806,6 +806,93 @@ body>* {
   padding: 12px 0 16px;
 }
 
+/* Sound button styles */
+.sound-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.sound-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.sound-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.sound-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sound-btn--playing {
+  animation: pulse 1s ease infinite;
+}
+
+.sound-icon {
+  padding-top: 4px;
+  padding-left: 1px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* loading spinner when sound is loading */
+.sound-btn--playing .sound-icon {
+  animation: bounce 0.5s ease infinite;
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .sound-btn {
+    width: 36px;
+    height: 36px;
+    bottom: 12px;
+    right: 12px;
+  }
+
+  .sound-icon {
+    font-size: 18px;
+  }
+}
+
 /* ---- Legendary badge ---- */
 .legendary-badge {
   background: linear-gradient(135deg, rgba(245, 197, 66, 0.2), rgba(240, 128, 48, 0.2));

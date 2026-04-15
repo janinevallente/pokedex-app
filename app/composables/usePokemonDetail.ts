@@ -27,18 +27,21 @@ export function usePokemonDetail(pokemonId: Ref<number | null>) {
   const species = ref<PokemonSpecies | null>(null)
   const evolution = ref<EvolutionStep[]>([])
   const loading = ref(false)
+  const cryUrl = ref<string>('')
 
   watch(pokemonId, async (id) => {
     if (!id) {
       detail.value = null
       species.value = null
       evolution.value = []
+      cryUrl.value = ''
       return
     }
     loading.value = true
     detail.value = null
     species.value = null
     evolution.value = []
+    cryUrl.value = ''
 
     try {
       const [d, s] = await Promise.all([
@@ -47,6 +50,12 @@ export function usePokemonDetail(pokemonId: Ref<number | null>) {
       ])
       detail.value = d
       species.value = s
+
+      if (d.cries?.latest) {
+        cryUrl.value = d.cries.latest
+      } else if (d.cries?.legacy) {
+        cryUrl.value = d.cries.legacy
+      }
 
       // Fetch evolution chain
       if (s.evolution_chain?.url) {
@@ -60,5 +69,5 @@ export function usePokemonDetail(pokemonId: Ref<number | null>) {
     }
   })
 
-  return { detail, species, evolution, loading }
+  return { detail, species, evolution, loading, cryUrl }
 }

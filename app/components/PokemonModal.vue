@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TYPE_HEX, padId, getTypeEffectiveness } from '~/types/pokemon'
 import { usePokemonDetail } from '~/composables/usePokemonDetail'
-import { Shield, TriangleAlert } from '@lucide/vue'
+import { Shield, TriangleAlert, Volume2 } from '@lucide/vue'
 
 const props = defineProps<{
   pokemonId: number | null
@@ -15,15 +15,69 @@ const emit = defineEmits<{
 }>()
 
 const pokemonIdRef = computed(() => props.pokemonId)
-const { detail, species, evolution, loading } = usePokemonDetail(pokemonIdRef)
+const { detail, species, evolution, loading, cryUrl } = usePokemonDetail(pokemonIdRef)
 
 type Tab = 'info' | 'stats' | 'moves' | 'evolution'
 const tab = ref<Tab>('info')
 const showBack = ref(false)
+const isPlaying = ref(false) // sound loading state
+let audioElement: HTMLAudioElement | null = null
+
+// Clean up audio on unmount
+onUnmounted(() => {
+  if (audioElement) {
+    audioElement.pause()
+    audioElement = null
+  }
+})
+
+// Function to play Pokémon cry
+const playCry = async () => {
+  if (!cryUrl.value || isPlaying.value) return
+  
+  try {
+    isPlaying.value = true
+    
+    // Stop any currently playing audio
+    if (audioElement) {
+      audioElement.pause()
+      audioElement = null
+    }
+    
+    // Create new audio element
+    audioElement = new Audio(cryUrl.value)
+    
+    // Play the sound
+    await audioElement.play()
+    
+    // Reset when finished
+    audioElement.onended = () => {
+      isPlaying.value = false
+      audioElement = null
+    }
+    
+    // Handle errors
+    audioElement.onerror = () => {
+      console.error('Failed to play Pokémon cry')
+      isPlaying.value = false
+      audioElement = null
+    }
+    
+  } catch (error) {
+    console.error('Error playing sound:', error)
+    isPlaying.value = false
+  }
+}
 
 watch(() => props.pokemonId, () => {
   tab.value = 'info'
   showBack.value = false
+   // Stop any playing sound when switching Pokémon
+  if (audioElement) {
+    audioElement.pause()
+    audioElement = null
+    isPlaying.value = false
+  }
 })
 
 const typeColor = computed(() => {
@@ -99,7 +153,20 @@ const infoItems = computed(() => [
     >
       <div class="modal-panel" :style="panelStyle">
         <!-- Hero header -->
-        <div class="modal-hero" :style="heroStyle">
+        <div class="modal-hero" :style="heroStyle" style="position: relative;">
+
+          <!-- Sound button - bottom right corner -->
+          <button
+            v-if="detail && cryUrl"
+            class="sound-btn"
+            :class="{ 'sound-btn--playing': isPlaying }"
+            @click="playCry"
+            :disabled="isPlaying"
+            title="Click to hear this Pokémon’s cry"
+          >
+            <div v-if="!isPlaying" class="sound-icon"><Volume2 :size="18" color="#e8344a" /></div>
+            <div v-else class="sound-icon"><Volume2 :size="18" color="#e8344a" /></div>
+          </button>
 
           <!-- Pokémon name & ID -->
           <div class="modal-title-area">

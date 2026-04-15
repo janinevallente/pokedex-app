@@ -24,6 +24,10 @@ export interface PokemonDetail {
   }
   moves: { move: { name: string } }[]
   species: { url: string }
+  cries?: {
+    latest: string
+    legacy: string
+  }
 }
 
 export interface PokemonSpecies {
