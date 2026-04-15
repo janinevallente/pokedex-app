@@ -40,6 +40,41 @@ export interface PokemonSpecies {
   is_mythical: boolean
 }
 
+// Evolution chain types from PokeAPI
+export interface EvolutionDetail {
+  min_level: number | null
+  item: { name: string } | null
+  trigger: { name: string }
+  happiness: number | null
+  min_beauty: number | null
+  min_affection: number | null
+  held_item: { name: string } | null
+  known_move: { name: string } | null
+  time_of_day: string
+  location: { name: string } | null
+  trade_species: { name: string } | null
+  needs_overworld_rain: boolean
+  turn_upside_down: boolean
+}
+
+export interface ChainLink {
+  species: { name: string; url: string }
+  evolution_details: EvolutionDetail[]
+  evolves_to: ChainLink[]
+}
+
+export interface EvolutionChain {
+  chain: ChainLink
+}
+
+// Flattened evolution step for display
+export interface EvolutionStep {
+  name: string
+  id: number
+  sprite: string
+  trigger: string       // human-readable trigger e.g. "Level 16", "Use Fire Stone"
+}
+
 export const STAT_COLORS: Record<string, string> = {
   hp: '#ff5555',
   attack: '#f5a623',
@@ -84,6 +119,89 @@ export const GENERATIONS = [
   { num: 9, label: 'Gen IX', sub: 'Paldea', offset: 905, limit: 120 },
 ]
 
+// Full type effectiveness chart
+// Each type lists: { immune, quarter, half, double, quadruple }
+// We compute effective matchups from defender's type(s)
+export const TYPE_CHART: Record<string, Record<string, number>> = {
+  normal: { rock: 0.5, ghost: 0, steel: 0.5 },
+  fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
+  water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
+  electric: { water: 2, electric: 0.5, grass: 0.5, ground: 0, flying: 2, dragon: 0.5 },
+  grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
+  ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
+  fighting: { normal: 2, ice: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0, dark: 2, steel: 2, fairy: 0.5 },
+  poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 2 },
+  ground: { fire: 2, electric: 2, grass: 0.5, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
+  flying: { electric: 0.5, grass: 2, ice: 0.5, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
+  psychic: { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
+  bug: { fire: 0.5, grass: 2, fighting: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
+  rock: { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
+  ghost: { normal: 0, fighting: 0, poison: 0.5, bug: 0.5, ghost: 2, dark: 0.5, psychic: 2 },
+  dragon: { dragon: 2, steel: 0.5, fairy: 0 },
+  dark: { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
+  steel: {
+    fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, steel: 0.5, fairy: 2,
+    normal: 0.5, grass: 0.5, psychic: 0.5, bug: 0.5, dragon: 0.5, dark: 0.5,
+    fighting: 0.5, flying: 0.5, ground: 2, poison: 0
+  },
+  fairy: { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 },
+}
+
+/**
+ * Computes the effective damage multiplier for each attacking type
+ * against a defender with one or two types.
+ * Returns { immune, quarter, half, double, quadruple } arrays of type names.
+ */
+export function getTypeEffectiveness(defenderTypes: string[]) {
+  const multipliers: Record<string, number> = {}
+
+  for (const attackType of ALL_TYPES) {
+    let mult = 1
+    for (const defType of defenderTypes) {
+      const chart = TYPE_CHART[attackType] || {}
+      mult *= chart[defType] ?? 1
+    }
+    multipliers[attackType] = mult
+  }
+
+  return {
+    immune: ALL_TYPES.filter(t => multipliers[t] === 0),
+    quarter: ALL_TYPES.filter(t => multipliers[t] === 0.25),
+    half: ALL_TYPES.filter(t => multipliers[t] === 0.5),
+    double: ALL_TYPES.filter(t => multipliers[t] === 2),
+    quadruple: ALL_TYPES.filter(t => multipliers[t] === 4),
+  }
+}
+
+/** Human-readable evolution trigger string */
+export function formatTrigger(detail: EvolutionDetail): string {
+  if (!detail) return ''
+  if (detail.trigger?.name === 'level-up') {
+    if (detail.min_level) return `Level ${detail.min_level}`
+    if (detail.happiness) return `High Friendship`
+    if (detail.min_beauty) return `High Beauty`
+    if (detail.known_move) return `Know ${detail.known_move.name.replace(/-/g, ' ')}`
+    if (detail.location) return `Level up at ${detail.location.name.replace(/-/g, ' ')}`
+    if (detail.time_of_day) return `Level up (${detail.time_of_day})`
+    return 'Level up'
+  }
+  if (detail.trigger?.name === 'use-item') {
+    return `Use ${(detail.item?.name || '').replace(/-/g, ' ')}`
+  }
+  if (detail.trigger?.name === 'trade') {
+    if (detail.held_item) return `Trade holding ${detail.held_item.name.replace(/-/g, ' ')}`
+    if (detail.trade_species) return `Trade with ${detail.trade_species.name}`
+    return 'Trade'
+  }
+  if (detail.trigger?.name === 'shed') return 'Shed'
+  return detail.trigger?.name?.replace(/-/g, ' ') || ''
+}
+
 export function padId(id: number): string {
   return String(id).padStart(3, '0')
+}
+
+export function speciesUrlToId(url: string): number {
+  const parts = url.split('/').filter(Boolean)
+  return parseInt(parts[parts.length - 1])
 }

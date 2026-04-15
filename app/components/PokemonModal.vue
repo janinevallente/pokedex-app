@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TYPE_HEX, padId } from '~/types/pokemon'
+import { TYPE_HEX, padId, getTypeEffectiveness } from '~/types/pokemon'
 import { usePokemonDetail } from '~/composables/usePokemonDetail'
 
 const props = defineProps<{
@@ -14,9 +14,9 @@ const emit = defineEmits<{
 }>()
 
 const pokemonIdRef = computed(() => props.pokemonId)
-const { detail, species, loading } = usePokemonDetail(pokemonIdRef)
+const { detail, species, evolution, loading } = usePokemonDetail(pokemonIdRef)
 
-type Tab = 'info' | 'stats' | 'moves'
+type Tab = 'info' | 'stats' | 'moves' | 'evolution'
 const tab = ref<Tab>('info')
 const showBack = ref(false)
 
@@ -53,6 +53,13 @@ const statTotal = computed(() =>
   detail.value?.stats.reduce((a, s) => a + s.base_stat, 0) ?? 0
 )
 
+// Type effectiveness
+const effectiveness = computed(() => {
+  if (!detail.value) return null
+  const defTypes = detail.value.types.map(t => t.type.name)
+  return getTypeEffectiveness(defTypes)
+})
+
 const heroStyle = computed(() => ({
   background: `linear-gradient(145deg, ${typeColor.value}30 0%, ${typeColor.value}10 50%, transparent 100%)`,
 }))
@@ -65,7 +72,6 @@ const spriteStyle = computed(() => ({
   filter: `drop-shadow(0 12px 32px ${typeColor.value}80)`,
 }))
 
-// Keyboard navigation
 const handleKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape') emit('close')
   if (e.key === 'ArrowLeft' && !props.isFirst) emit('prev')
@@ -116,8 +122,6 @@ const infoItems = computed(() => [
           <template v-else-if="detail">
             <!-- Sprite -->
             <div class="modal-sprite-wrapper">
-
-              <!--Left Arrow-->
               <button
                 v-if="!isFirst"
                 class="modal-edge-btn modal-edge-btn--left"
@@ -125,7 +129,6 @@ const infoItems = computed(() => [
                 @click="emit('prev')"
               >←</button>
 
-              <!--Right Arrow-->
               <button
                 class="modal-edge-btn modal-edge-btn--right"
                 title="Next"
@@ -138,6 +141,7 @@ const infoItems = computed(() => [
                 :alt="detail.name"
                 class="modal-sprite"
                 :style="spriteStyle"
+                @click="showBack = !showBack"
               />
             </div>
 
@@ -157,7 +161,7 @@ const infoItems = computed(() => [
         <!-- Tab nav -->
         <div v-if="detail" class="modal-tabs">
           <button
-            v-for="t in (['info', 'stats', 'moves'] as Tab[])"
+            v-for="t in (['info', 'stats', 'moves', 'evolution'] as Tab[])"
             :key="t"
             :class="['tab-btn', { active: tab === t }]"
             @click="tab = t"
@@ -168,23 +172,21 @@ const infoItems = computed(() => [
 
         <!-- Tab content -->
         <div v-if="detail" class="modal-content">
-          <!-- Info -->
+
+          <!-- ── INFO TAB ── -->
           <template v-if="tab === 'info'">
             <p v-if="flavorText" class="flavor-text">"{{ flavorText }}"</p>
 
             <div class="info-grid">
               <div v-for="item in infoItems" :key="item.label" class="info-cell">
                 <div class="info-cell-label">{{ item.label }}</div>
-                <div v-if="item.label !== 'Catch Rate'" class="info-cell-value">
-                  {{ item.value }}
-                </div>
-                <div v-if="item.label === 'Catch Rate'" class="info-cell-value">
-                  {{ item.value }} %
+                <div class="info-cell-value">
+                  {{ item.value }}{{ item.label === 'Catch Rate' ? ' %' : '' }}
                 </div>
               </div>
             </div>
 
-            <div>
+            <div class="abilities-section">
               <div class="abilities-label">Abilities</div>
               <div class="abilities-list">
                 <span
@@ -196,9 +198,62 @@ const infoItems = computed(() => [
                 </span>
               </div>
             </div>
+
+            <!-- Type effectiveness -->
+            <template v-if="effectiveness">
+              <!-- Strong against (resists) -->
+              <div
+                v-if="effectiveness.immune.length || effectiveness.quarter.length || effectiveness.half.length"
+                class="effectiveness-section"
+              >
+                <div class="effectiveness-label strong-label">
+                  <span class="eff-icon">🛡</span> Strong against
+                </div>
+                <div class="effectiveness-types">
+                  <span
+                    v-for="t in effectiveness.immune"
+                    :key="t"
+                    :class="['type-badge', `type-${t}`, 'eff-badge']"
+                  >{{ t }} <span class="eff-mult">×0</span></span>
+                  <span
+                    v-for="t in effectiveness.quarter"
+                    :key="t"
+                    :class="['type-badge', `type-${t}`, 'eff-badge']"
+                  >{{ t }} <span class="eff-mult">×¼</span></span>
+                  <span
+                    v-for="t in effectiveness.half"
+                    :key="t"
+                    :class="['type-badge', `type-${t}`, 'eff-badge']"
+                  >{{ t }} <span class="eff-mult">×½</span></span>
+                </div>
+              </div>
+
+              <!-- Weak against -->
+              <div
+                v-if="effectiveness.quadruple.length || effectiveness.double.length"
+                class="effectiveness-section"
+              >
+                <div class="effectiveness-label weak-label">
+                  <span class="eff-icon">⚠</span> Weak Against
+                </div>
+                <div class="effectiveness-types">
+                  <span
+                    v-for="t in effectiveness.quadruple"
+                    :key="t"
+                    :class="['type-badge', `type-${t}`, 'eff-badge']"
+                  >{{ t }} <span class="eff-mult">×4</span></span>
+                  <span
+                    v-for="t in effectiveness.double"
+                    :key="t"
+                    :class="['type-badge', `type-${t}`, 'eff-badge']"
+                  >{{ t }} <span class="eff-mult">×2</span></span>
+                </div>
+              </div>
+
+            </template>
           </template>
 
-          <!-- Stats -->
+          <!-- ── STATS TAB ── -->
           <template v-else-if="tab === 'stats'">
             <StatBar
               v-for="s in detail.stats"
@@ -212,7 +267,7 @@ const infoItems = computed(() => [
             </div>
           </template>
 
-          <!-- Moves -->
+          <!-- ── MOVES TAB ── -->
           <template v-else-if="tab === 'moves'">
             <div class="moves-count">{{ detail.moves.length }} moves available</div>
             <div class="moves-grid">
@@ -228,6 +283,34 @@ const infoItems = computed(() => [
               +{{ detail.moves.length - 48 }} more moves
             </div>
           </template>
+
+          <!-- ── EVOLUTION TAB ── -->
+          <template v-else-if="tab === 'evolution'">
+            <div v-if="evolution.length <= 1" class="evo-none">
+              This Pokémon does not evolve.
+            </div>
+            <div v-else class="evo-chain">
+              <template v-for="(step, i) in evolution" :key="step.id">
+                <!-- Evolution step card -->
+                <div
+                  :class="['evo-card', { 'evo-card--current': step.id === pokemonId }]"
+                >
+                  <img :src="step.sprite" :alt="step.name" class="evo-sprite" />
+                  <div class="evo-name">{{ step.name.replace(/-/g, ' ') }}</div>
+                  <div class="evo-id">#{{ padId(step.id) }}</div>
+                </div>
+
+                <!-- Arrow + trigger between steps -->
+                <div v-if="i < evolution.length - 1" class="evo-arrow-block">
+                  <div class="evo-arrow">→</div>
+                  <div v-if="evolution[i + 1].trigger" class="evo-trigger">
+                    {{ evolution[i + 1].trigger }}
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+
         </div>
 
         <!-- Footer -->
