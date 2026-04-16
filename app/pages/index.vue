@@ -7,24 +7,51 @@ import LogoImg from '~/assets/images/logo.png'
 
 useHead({ title: 'Pokédex Hub' })
 
-const generation = ref(1)
-const search = ref('')
-const typeFilter = ref<string | null>(null)
+const {
+  filtered,
+  loading,
+  batchLoading,
+  error,
+  currentPage,
+  totalPages,
+  hasMore,
+  hasPrevious,
+  nextPage,
+  previousPage,
+  goToPage,
+  totalCount,
+  search,
+  typeFilter,
+  genFilter,
+  allNames,
+} = usePokemonList()
+
 const selectedId = ref<number | null>(null)
 const showTypeMenu = ref(false)
+const showGenMenu = ref(false)
 const typeMenuRef = ref<HTMLElement | null>(null)
+const genMenuRef = ref<HTMLElement | null>(null)
 
-const { pokemon, loading, error } = usePokemonList(generation)
+// Add search states for dropdowns
+const typeSearch = ref('')
+const genSearch = ref('')
 
-const filtered = computed<PokemonSummary[]>(() =>
-  pokemon.value.filter(p => {
-    const matchSearch =
-      p.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      String(p.id).includes(search.value)
-    const matchType = !typeFilter.value || p.types.includes(typeFilter.value)
-    return matchSearch && matchType
-  })
-)
+// Filtered types based on search
+const filteredTypes = computed(() => {
+  if (!typeSearch.value) return ALL_TYPES
+  return ALL_TYPES.filter(t => 
+    t.toLowerCase().includes(typeSearch.value.toLowerCase())
+  )
+})
+
+// Filtered generations based on search
+const filteredGenerations = computed(() => {
+  if (!genSearch.value) return GENERATIONS
+  return GENERATIONS.filter(g => 
+    g.label.toLowerCase().includes(genSearch.value.toLowerCase()) ||
+    g.sub.toLowerCase().includes(genSearch.value.toLowerCase())
+  )
+})
 
 const selectedIndex = computed(() =>
   filtered.value.findIndex(p => p.id === selectedId.value)
@@ -40,31 +67,54 @@ function selectNext() {
     selectedId.value = filtered.value[selectedIndex.value + 1].id
 }
 
-function selectGen(num: number) {
-  generation.value = num
-  search.value = ''
-  typeFilter.value = null
-}
-
 function selectType(t: string | null) {
   typeFilter.value = t === typeFilter.value ? null : t
   showTypeMenu.value = false
 }
 
-// Close type dropdown on outside click
-onMounted(() => {
-  document.addEventListener('mousedown', (e) => {
-    if (typeMenuRef.value && !typeMenuRef.value.contains(e.target as Node)) {
-      showTypeMenu.value = false
-    }
-  })
+function selectGen(num: number | null) {
+  genFilter.value = num === genFilter.value ? null : num
+  showGenMenu.value = false
+}
+
+const activeGenLabel = computed(() => {
+  if (genFilter.value === null) return null
+  const g = GENERATIONS.find(g => g.num === genFilter.value)
+  return g ? `${g.label} · ${g.sub}` : null
 })
 
-const subtitleText = computed(() =>
-  loading.value
-    ? 'Loading…'
-    : `${filtered.value.length} of ${pokemon.value.length} Pokémon`
-)
+// const subtitleText = computed(() => {
+//   if (loading.value && filtered.value.length === 0) return 'Loading…'
+//   return `Showing ${filtered.value.length} of ${totalCount.value} Pokémon`
+// })
+
+// Utility function to capitalize first letter
+const capitalizeFirstLetter = (str: string): string => {
+  if (!str) return str
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+// Reset search when dropdown opens
+watch(showTypeMenu, (isOpen) => {
+  if (!isOpen) {
+    typeSearch.value = ''
+  }
+})
+
+watch(showGenMenu, (isOpen) => {
+  if (!isOpen) {
+    genSearch.value = ''
+  }
+})
+
+onMounted(() => {
+  document.addEventListener('mousedown', (e) => {
+    if (typeMenuRef.value && !typeMenuRef.value.contains(e.target as Node))
+      showTypeMenu.value = false
+    if (genMenuRef.value && !genMenuRef.value.contains(e.target as Node))
+      showGenMenu.value = false
+  })
+})
 </script>
 
 <template>
@@ -77,11 +127,11 @@ const subtitleText = computed(() =>
           <!-- Logo -->
           <div class="logo">
             <div>
-              <img class="logo-img" :src="LogoImg"/>
+              <img class="logo-img" :src="LogoImg" />
             </div>
             <div>
               <div class="logo-name">Pokédex Hub</div>
-              <div class="logo-subtitle">{{ subtitleText }}</div>
+              <div class="logo-subtitle">Developed by J9</div>
             </div>
           </div>
 
@@ -102,45 +152,93 @@ const subtitleText = computed(() =>
               :class="['type-filter-btn', { active: typeFilter }]"
               @click="showTypeMenu = !showTypeMenu"
             >
-              <span
-                v-if="typeFilter"
-                :class="['type-badge', `type-${typeFilter}`]"
-                style="font-size:11px; padding:2px 8px"
-              >{{ typeFilter }}</span>
+              <span v-if="typeFilter">{{ capitalizeFirstLetter(typeFilter) }}</span>
               <span v-else>All Types</span>
               <span class="type-filter-arrow">{{ showTypeMenu ? '▲' : '▼' }}</span>
             </button>
 
             <div v-if="showTypeMenu" class="type-dropdown">
-              <button
-                :class="['type-all-btn', { selected: !typeFilter }]"
-                @click="selectType(null)"
-              >
-                All Types
-              </button>
-              <button
-                v-for="t in ALL_TYPES"
-                :key="t"
-                :class="['type-badge', `type-${t}`]"
-                :style="typeFilter === t ? { outline: '2px solid rgba(255,255,255,0.5)' } : {}"
-                @click="selectType(t)"
-              >
-                {{ t }}
-              </button>
+              <div class="dropdown-search">
+                <input
+                  v-model="typeSearch"
+                  type="text"
+                  placeholder="Search type..."
+                  class="dropdown-search-input"
+                  @click.stop
+                />
+              </div>
+              <div class="dropdown-list">
+                <button
+                  :class="['dropdown-item', { selected: !typeFilter }]"
+                  @click="selectType(null)"
+                >
+                  All Types
+                </button>
+                <button
+                  v-for="t in filteredTypes"
+                  :key="t"
+                  :class="['dropdown-item', { selected: typeFilter === t }]"
+                  @click="selectType(t)"
+                >
+                  <span>{{ capitalizeFirstLetter(t) }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Generation filter -->
+          <div ref="genMenuRef" class="type-filter-wrapper">
+            <button
+              :class="['type-filter-btn', { active: genFilter !== null }]"
+              @click="showGenMenu = !showGenMenu"
+            >
+              <span v-if="activeGenLabel">{{ activeGenLabel }}</span>
+              <span v-else>All Gens</span>
+              <span class="type-filter-arrow">{{ showGenMenu ? '▲' : '▼' }}</span>
+            </button>
+
+            <div v-if="showGenMenu" class="type-dropdown gen-dropdown">
+              <div class="dropdown-search">
+                <input
+                  v-model="genSearch"
+                  type="text"
+                  placeholder="Search generation..."
+                  class="dropdown-search-input"
+                  @click.stop
+                />
+              </div>
+              <div class="dropdown-list">
+                <button
+                  :class="['dropdown-item', { selected: genFilter === null }]"
+                  @click="selectGen(null)"
+                >
+                  All Generations
+                </button>
+                <button
+                  v-for="g in filteredGenerations"
+                  :key="g.num"
+                  :class="['dropdown-item', { selected: genFilter === g.num }]"
+                  @click="selectGen(g.num)"
+                >
+                  <span class="gen-dropdown-label">{{ g.label }}</span>
+                  <span class="gen-dropdown-sub">{{ g.sub }}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Generation tabs -->
-        <div class="gen-tabs">
-          <button
-            v-for="g in GENERATIONS"
-            :key="g.num"
-            :class="['gen-tab', { active: generation === g.num }]"
-            @click="selectGen(g.num)"
-          >
-            {{ g.label }}
-            <span class="gen-tab-sub"> {{ g.sub }}</span>
+        <!-- Active filter chips -->
+        <div v-if="genFilter !== null || typeFilter" class="active-filters">
+          <span class="active-filters-label">Filters:</span>
+          <button v-if="genFilter !== null" class="filter-chip" @click="genFilter = null">
+            {{ activeGenLabel }} ✕
+          </button>
+          <button v-if="typeFilter" class="filter-chip" @click="typeFilter = null">
+            {{ capitalizeFirstLetter(typeFilter) }} ✕
+          </button>
+          <button class="filter-chip filter-chip--clear" @click="genFilter = null; typeFilter = null; search = ''">
+            Clear all
           </button>
         </div>
       </div>
@@ -148,8 +246,8 @@ const subtitleText = computed(() =>
 
     <!-- Main -->
     <main class="main-content">
-      <!-- Loading skeleton -->
-      <div v-if="loading" class="skeleton-grid">
+      <!-- Initial loading skeleton -->
+      <div v-if="loading && filtered.length === 0" class="skeleton-grid">
         <div
           v-for="i in 20"
           :key="i"
@@ -166,41 +264,116 @@ const subtitleText = computed(() =>
       </div>
 
       <!-- Empty state -->
-      <div v-else-if="filtered.length === 0" class="state-center">
+      <div v-else-if="!loading && filtered.length === 0" class="state-center">
         <div class="state-emoji">🔎</div>
         <div class="state-title">No Pokémon found</div>
-        <div class="state-sub">Try a different search or type filter</div>
+        <div class="state-sub">Try a different search or filter</div>
       </div>
 
       <!-- Grid -->
-      <div v-else class="pokemon-grid">
-        <PokemonCard
-          v-for="(p, i) in filtered"
-          :key="p.id"
-          :pokemon="p"
-          :delay="Math.min(i * 25, 500)"
-          @click="selectedId = p.id"
-        />
-      </div>
+      <template v-else>
+        <div class="pokemon-grid">
+          <PokemonCard
+            v-for="(p, i) in filtered"
+            :key="p.id"
+            :pokemon="p"
+            :delay="Math.min(i * 15, 400)"
+            @click="selectedId = p.id"
+          />
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="pagination-area">
+          <div class="pagination-controls">
+            <button
+              class="pagination-btn"
+              :disabled="!hasPrevious"
+              @click="previousPage"
+            >
+              <span class="pagination-arrow">←</span>
+              <span class="btn-text">Previous</span>
+            </button>
+            
+            <div class="pagination-pages">
+              <!-- First page -->
+              <button
+                v-if="currentPage > 2"
+                class="pagination-page-btn"
+                @click="goToPage(1)"
+              >
+                1
+              </button>
+              
+              <span v-if="currentPage > 3" class="pagination-dots">...</span>
+              
+              <!-- Previous page -->
+              <button
+                v-if="hasPrevious"
+                class="pagination-page-btn"
+                @click="goToPage(currentPage - 1)"
+              >
+                {{ currentPage - 1 }}
+              </button>
+              
+              <!-- Current page -->
+              <button class="pagination-page-btn pagination-page-btn--active">
+                {{ currentPage }}
+              </button>
+              
+              <!-- Next page -->
+              <button
+                v-if="hasMore"
+                class="pagination-page-btn"
+                @click="goToPage(currentPage + 1)"
+              >
+                {{ currentPage + 1 }}
+              </button>
+              
+              <span v-if="currentPage < totalPages - 2" class="pagination-dots">...</span>
+              
+              <!-- Last page -->
+              <button
+                v-if="currentPage < totalPages - 1"
+                class="pagination-page-btn"
+                @click="goToPage(totalPages)"
+              >
+                {{ totalPages }}
+              </button>
+            </div>
+            
+            <button
+              class="pagination-btn"
+              :disabled="!hasMore"
+              @click="nextPage"
+            >
+              <span class="btn-text">Next</span>
+              <span class="pagination-arrow">→</span>
+            </button>
+          </div>
+
+          <div class="pagination-info">
+            Page {{ currentPage }} of {{ totalPages }}
+            <span class="pagination-total">({{ totalCount }} Total Pokémon)</span>
+          </div>
+        </div>
+      </template>
     </main>
 
     <!-- Footer -->
     <footer class="site-footer">
       <p>
-        Developed by J9
-      </p>
-      <p>
         Data from
         <a href="https://pokeapi.co" target="_blank" rel="noopener noreferrer">PokéAPI</a>
         · Not affiliated with Nintendo or The Pokémon Company
       </p>
+      <p>All rights reserved © 2026</p>
     </footer>
 
     <!-- Modal -->
     <PokemonModal
       :pokemon-id="selectedId"
       :is-first="selectedIndex === 0"
-      :is-last="selectedIndex === filtered?.length - 1"
+      :is-last="selectedIndex === filtered.length - 1"
       @close="selectedId = null"
       @prev="selectPrev"
       @next="selectNext"
