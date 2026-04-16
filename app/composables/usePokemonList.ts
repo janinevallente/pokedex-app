@@ -1,7 +1,7 @@
 import type { PokemonSummary } from '~/types/pokemon'
 import { GENERATIONS } from '~/types/pokemon'
 
-const PAGE_SIZE = 50 // Number of Pokémon per page
+const PAGE_SIZE = 48 // Number of Pokémon per page
 
 interface NameEntry { id: number; name: string }
 

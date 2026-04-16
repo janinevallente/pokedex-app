@@ -79,6 +79,41 @@ export interface EvolutionStep {
   trigger: string       // human-readable trigger e.g. "Level 16", "Use Fire Stone"
 }
 
+export interface PokemonEncounter {
+  location_area: {
+    name: string
+    url: string
+  }
+  version_details: {
+    version: {
+      name: string
+      url: string
+    }
+    max_chance: number
+    encounter_details: {
+      method: {
+        name: string
+      }
+      chance: number
+      condition_values: any[]
+      max_level: number
+      min_level: number
+    }[]
+  }[]
+}
+
+export interface EncounterArea {
+  name: string
+  games: {
+    game: string
+    methods: {
+      method: string
+      chance: number
+      levels: string
+    }[]
+  }[]
+}
+
 export const STAT_COLORS: Record<string, string> = {
   hp: '#ff5555',
   attack: '#f5a623',

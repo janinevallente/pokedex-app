@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TYPE_HEX, padId, getTypeEffectiveness } from '~/types/pokemon'
 import { usePokemonDetail } from '~/composables/usePokemonDetail'
-import { Shield, TriangleAlert, Volume2 } from '@lucide/vue'
+import { Shield, TriangleAlert, Volume2, MapPin } from '@lucide/vue'
 
 const props = defineProps<{
   pokemonId: number | null
@@ -16,13 +16,87 @@ const emit = defineEmits<{
 }>()
 
 const pokemonIdRef = computed(() => props.pokemonId)
-const { detail, species, evolution, loading, cryUrl } = usePokemonDetail(pokemonIdRef)
+const { detail, species, evolution, loading, cryUrl, encounters } = usePokemonDetail(pokemonIdRef)
 
-type Tab = 'info' | 'stats' | 'moves' | 'evolution'
+type Tab = 'info' | 'stats' | 'moves' | 'evolution' | 'location'
 const tab = ref<Tab>('info')
 const showBack = ref(false)
 const isPlaying = ref(false) // sound loading state
 let audioElement: HTMLAudioElement | null = null
+
+// Utility function to capitalize first letter
+const capitalizeFirstLetter = (str: string): string => {
+  if (!str) return str
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+// Group encounters by game
+const groupedEncounters = computed(() => {
+  const gameMap = new Map<string, { location: string; methods: any[] }[]>()
+  
+  for (const location of encounters.value) {
+    for (const game of location.games) {
+      if (!gameMap.has(game.game)) {
+        gameMap.set(game.game, [])
+      }
+      gameMap.get(game.game)!.push({
+        location: location.name,
+        methods: game.methods
+      })
+    }
+  }
+  
+  // Convert to array and sort by game name
+  return Array.from(gameMap.entries())
+    .map(([game, locations]) => ({
+      game,
+      locations: locations.sort((a, b) => a.location.localeCompare(b.location)),
+      locationCount: locations.length
+    }))
+    .sort((a, b) => a.game.localeCompare(b.game))
+})
+
+// Helper to get game version color
+const getGameColor = (game: string): string => {
+  const gameColors: Record<string, string> = {
+    'Red': '#ff4444',
+    'Blue': '#4444ff',
+    'Yellow': '#ffff44',
+    'Gold': '#ffcc44',
+    'Silver': '#cccccc',
+    'Crystal': '#44ccff',
+    'Ruby': '#ff4444',
+    'Sapphire': '#4444ff',
+    'Emerald': '#44ff44',
+    'Diamond': '#44ccff',
+    'Pearl': '#ff44ff',
+    'Platinum': '#cccccc',
+    'Black': '#444444',
+    'White': '#ffffff',
+    'Black 2': '#333333',
+    'White 2': '#eeeeee',
+    'X': '#44aaff',
+    'Y': '#ff4444',
+    'Omega Ruby': '#ff4444',
+    'Alpha Sapphire': '#4444ff',
+    'Sun': '#ffaa44',
+    'Moon': '#aa88ff',
+    'Ultra Sun': '#ffcc44',
+    'Ultra Moon': '#aa99ff',
+    'Sword': '#4488ff',
+    'Shield': '#ff4444',
+    'Brilliant Diamond': '#44ccff',
+    'Shining Pearl': '#ff44ff',
+    'Legends Arceus': '#88aaff',
+    'Scarlet': '#ff4444',
+    'Violet': '#8844ff'
+  }
+  
+  for (const [key, color] of Object.entries(gameColors)) {
+    if (game.includes(key)) return color
+  }
+  return '#56c0a9'
+}
 
 // Clean up audio on unmount
 onUnmounted(() => {
@@ -230,14 +304,16 @@ const infoItems = computed(() => [
 
         <!-- Tab nav -->
         <div v-if="detail" class="modal-tabs">
-          <button
-            v-for="t in (['info', 'stats', 'moves', 'evolution'] as Tab[])"
-            :key="t"
-            :class="['tab-btn', { active: tab === t }]"
-            @click="tab = t"
-          >
-            {{ t.charAt(0).toUpperCase() + t.slice(1) }}
-          </button>
+          <div class="modal-tabs-inner">
+            <button
+              v-for="t in (['info', 'stats', 'moves', 'evolution', 'location'] as Tab[])"
+              :key="t"
+              :class="['tab-btn', { active: tab === t }]"
+              @click="tab = t"
+            >
+              {{ t.charAt(0).toUpperCase() + t.slice(1) }}
+            </button>
+          </div>
         </div>
 
         <!-- Tab content -->
@@ -378,6 +454,67 @@ const infoItems = computed(() => [
                   </div>
                 </div>
               </template>
+            </div>
+          </template>
+
+          <!-- ── LOCATION TAB ── -->
+          <template v-else-if="tab === 'location'">
+            <div v-if="encounters.length === 0" class="location-empty">
+              <MapPin :size="48" class="location-empty-icon" />
+              <div class="location-empty-title">No location data available</div>
+              <div class="location-empty-sub">This Pokémon hasn't been encountered in any game yet.</div>
+            </div>
+            
+            <div v-else class="location-container">
+              <div class="location-table-wrapper">
+                <table class="location-table">
+                  <thead>
+                    <tr>
+                      <th>Pokémon Game</th>
+                      <th>Location</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template v-for="(group, gameIndex) in groupedEncounters" :key="group.game">
+                      <tr>
+                        <td class="game-cell" :rowspan="group.locationCount">
+                          <span 
+                            class="game-badge"
+                            :style="{ borderLeftColor: getGameColor(group.game) }"
+                          >
+                            {{ group.game }}
+                          </span>
+                        </td>
+                        <td class="location-cell">
+                          <div class="location-info">
+                            <span class="location-name-text">{{ group.locations[0].location }}</span>
+                            <div class="location-details">
+                              <span v-for="(method, mIdx) in group.locations[0].methods" :key="mIdx" class="method-tag">
+                                {{ capitalizeFirstLetter(method.method) }} (Lv. {{ method.levels }})
+                                <span v-if="method.chance" class="chance-text">{{ method.chance }}%</span>
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr v-for="(location, idx) in group.locations.slice(1)" :key="idx">
+                        <td class="location-cell">
+                          <div class="location-info">
+                            <span class="location-name-text">{{ location.location }}</span>
+                            <div class="location-details">
+                              <span v-for="(method, mIdx) in location.methods" :key="mIdx" class="method-tag">
+                                {{ capitalizeFirstLetter(method.method) }} (Lv. {{ method.levels }})
+                                <span v-if="method.chance" class="chance-text">{{ method.chance }}%</span>
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+
             </div>
           </template>
 

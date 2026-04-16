@@ -1043,11 +1043,19 @@ body>* {
 /* ---- Tab nav ---- */
 .modal-tabs {
   /*--Top, Right, Bottom, Left--*/
-  padding: 5px 16px;
+  padding: 8px 16px;
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-surface);
+}
+
+.modal-tabs-inner {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-btn {
@@ -1836,5 +1844,187 @@ body>* {
   
   .pagination-info {
     font-size: 12px;
+  }
+}
+
+/* Location table styles */
+.location-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.location-empty-icon {
+  opacity: 0.4;
+  margin-bottom: 8px;
+}
+
+.location-empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.location-empty-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.location-container {
+  padding: 4px 0;
+}
+
+.location-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.location-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.location-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #84849a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.location-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.location-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.game-cell {
+  width: 35%;
+}
+
+.game-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--bg-elevated);
+  border-left: 3px solid;
+  border-radius: 4px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.location-cell {
+  width: 65%;
+}
+
+.location-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.location-name-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.location-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.method-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--bg-elevated);
+  border-radius: 16px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.chance-text {
+  color: var(--red-primary);
+  font-weight: 600;
+  font-size: 10px;
+}
+
+/* Scrollbar styles */
+.location-table-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.location-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.location-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+.location-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+
+/* Responsive table */
+@media (max-width: 640px) {
+  .location-table th,
+  .location-table td {
+    padding: 10px 12px;
+  }
+  
+  .game-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  .location-name-text {
+    font-size: 12px;
+  }
+  
+  .method-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  .game-cell {
+    width: 30%;
+  }
+  
+  .location-cell {
+    width: 70%;
   }
 }
