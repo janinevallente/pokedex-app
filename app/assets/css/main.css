@@ -99,7 +99,7 @@ body>* {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
-  padding: 0 24px;
+  padding: 4px 24px;
 }
 
 .header-inner {
@@ -113,6 +113,96 @@ body>* {
   gap: 20px;
   padding: 16px 0 12px;
   flex-wrap: wrap;
+}
+
+/* Responsive header layout */
+@media (max-width: 768px) {
+  .site-header {
+    padding-bottom: 9px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+  }
+  
+  .logo {
+    width: 100%;
+    /* justify-content: center; */
+    padding-top: 15px;
+    padding-bottom: 10px;
+  }
+  
+  .search-wrapper {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  /* Filters wrapper for 2-column layout */
+  .filters-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .type-filter-wrapper {
+    width: 100%;
+  }
+  
+  .type-filter-btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  /* Dropdown positioning for mobile */
+  .type-dropdown {
+    position: fixed;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: auto;
+    width: calc(100% - 32px);
+    max-width: 320px;
+    min-width: auto;
+  }
+  
+  /* Reset positioning for gen dropdown on mobile */
+  .gen-dropdown {
+    left: 50%;
+    right: auto;
+  }
+}
+
+/* For desktop (above 768px) */
+@media (min-width: 769px) {
+  .filters-wrapper {
+    display: flex;
+    gap: 20px;
+    width: auto;
+  }
+  
+  .type-filter-wrapper {
+    width: auto;
+  }
+  
+  .type-filter-btn {
+    width: auto;
+    justify-content: center;
+  }
+  
+  .type-dropdown {
+    position: absolute;
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+  
+  .gen-dropdown {
+    right: 0;
+    left: auto;
+  }
 }
 
 /* ---- Logo ---- */

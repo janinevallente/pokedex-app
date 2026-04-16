@@ -146,83 +146,85 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Type filter -->
-          <div ref="typeMenuRef" class="type-filter-wrapper">
-            <button
-              :class="['type-filter-btn', { active: typeFilter }]"
-              @click="showTypeMenu = !showTypeMenu"
-            >
-              <span v-if="typeFilter">{{ capitalizeFirstLetter(typeFilter) }}</span>
-              <span v-else>All Types</span>
-              <span class="type-filter-arrow">{{ showTypeMenu ? '▲' : '▼' }}</span>
-            </button>
+          <div class="filters-wrapper">
+            <!-- Type filter -->
+            <div ref="typeMenuRef" class="type-filter-wrapper">
+              <button
+                :class="['type-filter-btn', { active: typeFilter }]"
+                @click="showTypeMenu = !showTypeMenu"
+              >
+                <span v-if="typeFilter">{{ capitalizeFirstLetter(typeFilter) }}</span>
+                <span v-else>All Types</span>
+                <span class="type-filter-arrow">{{ showTypeMenu ? '▲' : '▼' }}</span>
+              </button>
 
-            <div v-if="showTypeMenu" class="type-dropdown">
-              <div class="dropdown-search">
-                <input
-                  v-model="typeSearch"
-                  type="text"
-                  placeholder="Search type..."
-                  class="dropdown-search-input"
-                  @click.stop
-                />
-              </div>
-              <div class="dropdown-list">
-                <button
-                  :class="['dropdown-item', { selected: !typeFilter }]"
-                  @click="selectType(null)"
-                >
-                  All Types
-                </button>
-                <button
-                  v-for="t in filteredTypes"
-                  :key="t"
-                  :class="['dropdown-item', { selected: typeFilter === t }]"
-                  @click="selectType(t)"
-                >
-                  <span>{{ capitalizeFirstLetter(t) }}</span>
-                </button>
+              <div v-if="showTypeMenu" class="type-dropdown">
+                <div class="dropdown-search">
+                  <input
+                    v-model="typeSearch"
+                    type="text"
+                    placeholder="Search type..."
+                    class="dropdown-search-input"
+                    @click.stop
+                  />
+                </div>
+                <div class="dropdown-list">
+                  <button
+                    :class="['dropdown-item', { selected: !typeFilter }]"
+                    @click="selectType(null)"
+                  >
+                    All Types
+                  </button>
+                  <button
+                    v-for="t in filteredTypes"
+                    :key="t"
+                    :class="['dropdown-item', { selected: typeFilter === t }]"
+                    @click="selectType(t)"
+                  >
+                    <span>{{ capitalizeFirstLetter(t) }}</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Generation filter -->
-          <div ref="genMenuRef" class="type-filter-wrapper">
-            <button
-              :class="['type-filter-btn', { active: genFilter !== null }]"
-              @click="showGenMenu = !showGenMenu"
-            >
-              <span v-if="activeGenLabel">{{ activeGenLabel }}</span>
-              <span v-else>All Gens</span>
-              <span class="type-filter-arrow">{{ showGenMenu ? '▲' : '▼' }}</span>
-            </button>
+            <!-- Generation filter -->
+            <div ref="genMenuRef" class="type-filter-wrapper">
+              <button
+                :class="['type-filter-btn', { active: genFilter !== null }]"
+                @click="showGenMenu = !showGenMenu"
+              >
+                <span v-if="activeGenLabel">{{ activeGenLabel }}</span>
+                <span v-else>All Gens</span>
+                <span class="type-filter-arrow">{{ showGenMenu ? '▲' : '▼' }}</span>
+              </button>
 
-            <div v-if="showGenMenu" class="type-dropdown gen-dropdown">
-              <div class="dropdown-search">
-                <input
-                  v-model="genSearch"
-                  type="text"
-                  placeholder="Search generation..."
-                  class="dropdown-search-input"
-                  @click.stop
-                />
-              </div>
-              <div class="dropdown-list">
-                <button
-                  :class="['dropdown-item', { selected: genFilter === null }]"
-                  @click="selectGen(null)"
-                >
-                  All Generations
-                </button>
-                <button
-                  v-for="g in filteredGenerations"
-                  :key="g.num"
-                  :class="['dropdown-item', { selected: genFilter === g.num }]"
-                  @click="selectGen(g.num)"
-                >
-                  <span class="gen-dropdown-label">{{ g.label }}</span>
-                  <span class="gen-dropdown-sub">{{ g.sub }}</span>
-                </button>
+              <div v-if="showGenMenu" class="type-dropdown gen-dropdown">
+                <div class="dropdown-search">
+                  <input
+                    v-model="genSearch"
+                    type="text"
+                    placeholder="Search generation..."
+                    class="dropdown-search-input"
+                    @click.stop
+                  />
+                </div>
+                <div class="dropdown-list">
+                  <button
+                    :class="['dropdown-item', { selected: genFilter === null }]"
+                    @click="selectGen(null)"
+                  >
+                    All Generations
+                  </button>
+                  <button
+                    v-for="g in filteredGenerations"
+                    :key="g.num"
+                    :class="['dropdown-item', { selected: genFilter === g.num }]"
+                    @click="selectGen(g.num)"
+                  >
+                    <span class="gen-dropdown-label">{{ g.label }}</span>
+                    <span class="gen-dropdown-sub">{{ g.sub }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
