@@ -55,38 +55,44 @@ export function usePokemonDetail(pokemonId: Ref<number | null>) {
     encounters.value = []
 
     try {
-      const [d, s] = await Promise.all([
-        $fetch<PokemonDetail>(`${BASE}/pokemon/${id}`),
-        $fetch<PokemonSpecies>(`${BASE}/pokemon-species/${id}`),
-      ])
+      const d = await $fetch<PokemonDetail>(`${BASE}/pokemon/${id}`)
       detail.value = d
-      species.value = s
 
       if (d.cries?.latest) {
         cryUrl.value = d.cries.latest
       } else if (d.cries?.legacy) {
         cryUrl.value = d.cries.legacy
       }
+    } catch (e) {
+      console.error('Failed to fetch pokemon detail:', e)
+    }
 
-      // Fetch encounter data
-      try {
-        const encounterData = await $fetch<PokemonEncounter[]>(`${BASE}/pokemon/${id}/encounters`)
-        encounters.value = processEncounters(encounterData)
-      } catch (e) {
-        console.error('Failed to fetch encounters:', e)
-        encounters.value = []
-      }
+    // Fetch species data separately
+    try {
+      const s = await $fetch<PokemonSpecies>(`${BASE}/pokemon-species/${id}`)
+      species.value = s
 
       // Fetch evolution chain
       if (s.evolution_chain?.url) {
         const chain = await $fetch<EvolutionChain>(s.evolution_chain.url)
         evolution.value = flattenChain(chain.chain)
       }
-    } catch {
-      // silent fail
-    } finally {
-      loading.value = false
+    } catch (e) {
+      console.error('Failed to fetch species data:', e)
+      species.value = null
+      evolution.value = []
     }
+
+    // Fetch encounter data
+    try {
+      const encounterData = await $fetch<PokemonEncounter[]>(`${BASE}/pokemon/${id}/encounters`)
+      encounters.value = processEncounters(encounterData)
+    } catch (e) {
+      console.error('Failed to fetch encounters:', e)
+      encounters.value = []
+    }
+
+    loading.value = false
   })
 
   return { detail, species, evolution, loading, cryUrl, encounters }

@@ -1,17 +1,23 @@
 import type { PokemonSummary } from '~/types/pokemon'
-import { GENERATIONS } from '~/types/pokemon'
+import { GENERATIONS, extractBaseName } from '~/types/pokemon'
 
-const PAGE_SIZE = 48 // Number of Pokémon per page
+const PAGE_SIZE = 49
 
-interface NameEntry { id: number; name: string }
+// Each entry from the server: id, name, optional baseId (variants only)
+interface NameEntry {
+  id: number
+  name: string
+  baseId?: number
+}
+
+const VARIANT_ID_THRESHOLD = 10000
 
 export function usePokemonList() {
-  // Full national dex name list (lightweight — id + name only)
+  // Full grouped name list returned by the server (base + variants interleaved)
   const allNames = ref<NameEntry[]>([])
   const namesLoading = ref(false)
   const namesError = ref<string | null>(null)
 
-  // Loaded detail summaries
   const loadedPokemon = ref<PokemonSummary[]>([])
   const batchLoading = ref(false)
   const loadedIds = ref(new Set<number>())
@@ -25,21 +31,42 @@ export function usePokemonList() {
   const currentPage = ref(1)
   const pageSize = ref(PAGE_SIZE)
 
-  // --- Derived: which IDs match the current filters on the name list ---
+  // Set of base species names for the selected gen (to filter variants by gen)
+  const genBaseNames = computed<Set<string>>(() => {
+    if (genFilter.value === null) return new Set()
+    const g = GENERATIONS.find(g => g.num === genFilter.value)
+    if (!g) return new Set()
+    const start = g.offset + 1
+    const end = g.offset + g.limit
+    return new Set(
+      allNames.value
+        .filter(p => p.id >= start && p.id <= end)
+        .map(p => p.name.toLowerCase())
+    )
+  })
+
+  // Filtered name list — preserves server grouping order (base then its variants)
   const filteredNames = computed<NameEntry[]>(() => {
     let list = allNames.value
 
-    // Gen filter: slice by national dex range
     if (genFilter.value !== null) {
       const g = GENERATIONS.find(g => g.num === genFilter.value)
       if (g) {
-        const start = g.offset + 1        // 1-based national dex ID start
-        const end = g.offset + g.limit    // inclusive end
-        list = list.filter(p => p.id >= start && p.id <= end)
+        const start = g.offset + 1
+        const end = g.offset + g.limit
+        const baseNames = genBaseNames.value
+        list = list.filter(p => {
+          if (p.id <= VARIANT_ID_THRESHOLD) {
+            return p.id >= start && p.id <= end
+          } else {
+            // Include variant only if its base species is in this gen
+            const base = extractBaseName(p.name)
+            return baseNames.has(base)
+          }
+        })
       }
     }
 
-    // Search filter on name or id (works even before details are loaded)
     if (search.value.trim()) {
       const q = search.value.toLowerCase().trim()
       list = list.filter(p =>
@@ -50,7 +77,6 @@ export function usePokemonList() {
     return list
   })
 
-  // Paginated names
   const paginatedNames = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value
     const end = start + pageSize.value
@@ -58,11 +84,10 @@ export function usePokemonList() {
   })
 
   const visibleIds = computed(() => paginatedNames.value.map(p => p.id))
+  const visibleBaseIds = computed(() => paginatedNames.value.map(p => p.baseId ?? 0))
 
-  // Total pages
   const totalPages = computed(() => Math.ceil(filteredNames.value.length / pageSize.value))
 
-  // Details we have for visible IDs
   const visiblePokemon = computed<PokemonSummary[]>(() => {
     const map = new Map(loadedPokemon.value.map(p => [p.id, p]))
     return visibleIds.value
@@ -70,11 +95,18 @@ export function usePokemonList() {
       .filter((p): p is PokemonSummary => !!p)
   })
 
-  // Apply type filter on loaded details only
   const filtered = computed<PokemonSummary[]>(() => {
     if (!typeFilter.value) return visiblePokemon.value
     return visiblePokemon.value.filter(p => p.types.includes(typeFilter.value!))
   })
+
+  // Counts
+  const baseCount = computed(() =>
+    filteredNames.value.filter(p => p.id <= VARIANT_ID_THRESHOLD).length
+  )
+  const variantCount = computed(() =>
+    filteredNames.value.filter(p => p.id > VARIANT_ID_THRESHOLD).length
+  )
 
   const hasMore = computed(() => currentPage.value < totalPages.value)
   const hasPrevious = computed(() => currentPage.value > 1)
@@ -82,18 +114,22 @@ export function usePokemonList() {
   const error = computed(() => namesError.value)
   const totalCount = computed(() => filteredNames.value.length)
 
-  // --- Fetch missing details for currently visible IDs ---
-  async function fetchMissingDetails(ids: number[]) {
-    const missing = ids.filter(id => !loadedIds.value.has(id))
-    if (!missing.length) return
+  async function fetchMissingDetails(ids: number[], baseIds: number[]) {
+    const missingIndices = ids
+      .map((id, i) => ({ id, baseId: baseIds[i], i }))
+      .filter(({ id }) => !loadedIds.value.has(id))
+
+    if (!missingIndices.length) return
 
     batchLoading.value = true
     try {
-      // Chunk into batches of 24 to avoid overwhelming the API
-      for (let i = 0; i < missing.length; i += PAGE_SIZE) {
-        const chunk = missing.slice(i, i + PAGE_SIZE)
+      for (let i = 0; i < missingIndices.length; i += PAGE_SIZE) {
+        const chunk = missingIndices.slice(i, i + PAGE_SIZE)
         const data = await $fetch<PokemonSummary[]>('/api/pokemon-batch', {
-          params: { ids: chunk.join(',') },
+          params: {
+            ids: chunk.map(c => c.id).join(','),
+            baseIds: chunk.map(c => c.baseId).join(','),
+          },
         })
         for (const p of data) {
           if (!loadedIds.value.has(p.id)) {
@@ -109,7 +145,6 @@ export function usePokemonList() {
     }
   }
 
-  // Pagination methods
   function nextPage() {
     if (hasMore.value) {
       currentPage.value++
@@ -131,17 +166,15 @@ export function usePokemonList() {
     }
   }
 
-  // Reset page when filters change
   watch([search, typeFilter, genFilter], () => {
     currentPage.value = 1
   })
 
-  // Watch visible IDs and fetch details when they change
-  watch(visibleIds, (ids) => {
-    fetchMissingDetails(ids)
+  // When the visible window changes, fetch details for any unseen IDs
+  watch([visibleIds, visibleBaseIds], ([ids, baseIds]) => {
+    fetchMissingDetails(ids, baseIds)
   })
 
-  // Initial load: fetch the full name list once
   async function init() {
     namesLoading.value = true
     namesError.value = null
@@ -170,6 +203,8 @@ export function usePokemonList() {
     previousPage,
     goToPage,
     totalCount,
+    baseCount,
+    variantCount,
     search,
     typeFilter,
     genFilter,

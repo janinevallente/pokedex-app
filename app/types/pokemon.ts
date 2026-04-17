@@ -3,6 +3,87 @@ export interface PokemonSummary {
   name: string
   types: string[]
   sprite: string
+  isVariant?: boolean
+  variantLabel?: string  // e.g. "Mega", "Gigantamax", "Alolan", etc.
+  baseId?: number        // national dex ID of the base form (variants only)
+}
+
+// const VARIANT_KEYWORDS = [
+//   'mega-x', 'mega-y', 'mega', 'gmax', 'alola', 'galar',
+//   'hisui', 'paldea', 'primal', 'origin', 'therian', 'eternamax',
+//   'black', 'white', 'sky',
+// ]
+
+const VARIANT_KEYWORDS = [
+  'mega-x', 
+  'mega-y', 
+  'mega', 
+  'gmax', 
+  'alola', 
+  'galar',
+  'hisui', 
+  'paldea', 
+  'primal', 
+  'origin', 
+  'therian', 
+  'eternamax',
+  'black', 
+  'white', 
+  'sky',
+  'heat',
+  "wash",
+  "frost",
+  "fan",
+  "mow",
+  // "plant",
+  // "sandy",
+  // "trash",
+  // "normal",
+  // "attack",
+  // "defense",
+  // "speed",
+  // "baile",
+  // "pom-pom",
+  // "pau",
+  // "sensu",
+  // "amped",
+  // "low-key"
+]
+
+/**
+ * Extracts the base species name from a variant name.
+ * e.g. "blastoise-mega"  -> "blastoise"
+ *      "mewtwo-mega-x"   -> "mewtwo"
+ *      "raichu-alola"    -> "raichu"
+ */
+export function extractBaseName(name: string): string {
+  const lower = name.toLowerCase()
+  for (const kw of VARIANT_KEYWORDS) {
+    const idx = lower.indexOf(`-${kw}`)
+    if (idx !== -1) return lower.slice(0, idx)
+  }
+  return lower
+}
+
+/** Extracts a human-readable variant label from a Pokémon name */
+export function getVariantLabel(name: string): string | undefined {
+  const lower = name.toLowerCase()
+  if (lower.includes('mega-x')) return 'Mega X'
+  if (lower.includes('mega-y')) return 'Mega Y'
+  if (lower.includes('mega')) return 'Mega'
+  if (lower.includes('gmax')) return 'Gigantamax'
+  if (lower.includes('alola') || lower.includes('alolan')) return 'Alolan'
+  if (lower.includes('galar') || lower.includes('galarian')) return 'Galarian'
+  if (lower.includes('hisui') || lower.includes('hisuian')) return 'Hisuian'
+  if (lower.includes('paldea') || lower.includes('paldean')) return 'Paldean'
+  if (lower.includes('primal')) return 'Primal'
+  if (lower.includes('origin')) return 'Origin'
+  if (lower.includes('therian')) return 'Therian'
+  if (lower.includes('black')) return 'Black'
+  if (lower.includes('white')) return 'White'
+  if (lower.includes('sky')) return 'Sky'
+  if (lower.includes('eternamax')) return 'Eternamax'
+  return undefined
 }
 
 export interface PokemonDetail {
@@ -159,8 +240,6 @@ export const GENERATIONS = [
 ]
 
 // Full type effectiveness chart
-// Each type lists: { immune, quarter, half, double, quadruple }
-// We compute effective matchups from defender's type(s)
 export const TYPE_CHART: Record<string, Record<string, number>> = {
   normal: { rock: 0.5, ghost: 0, steel: 0.5 },
   fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
@@ -189,7 +268,6 @@ export const TYPE_CHART: Record<string, Record<string, number>> = {
 /**
  * Computes the effective damage multiplier for each attacking type
  * against a defender with one or two types.
- * Returns { immune, quarter, half, double, quadruple } arrays of type names.
  */
 export function getTypeEffectiveness(defenderTypes: string[]) {
   const multipliers: Record<string, number> = {}

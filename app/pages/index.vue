@@ -20,6 +20,8 @@ const {
   previousPage,
   goToPage,
   totalCount,
+  baseCount,
+  variantCount,
   search,
   typeFilter,
   genFilter,
@@ -355,7 +357,7 @@ onMounted(() => {
 
           <div class="pagination-info">
             Page {{ currentPage }} of {{ totalPages }}
-            <span class="pagination-total">({{ totalCount }} Total Pokémon)</span>
+            <span class="pagination-total">({{ totalCount }} Total: {{ baseCount }} Base + {{ variantCount }} Variants)</span>
           </div>
         </div>
       </template>
