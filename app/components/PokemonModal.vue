@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TYPE_HEX, padId, getTypeEffectiveness } from '~/types/pokemon'
 import { usePokemonDetail } from '~/composables/usePokemonDetail'
-import { Shield, TriangleAlert, Volume2, MapPin } from '@lucide/vue'
+import { Shield, TriangleAlert, Volume2, MapPin, Ghost } from '@lucide/vue'
 
 const props = defineProps<{
   pokemonId: number | null
@@ -432,8 +432,11 @@ const infoItems = computed(() => [
 
           <!-- ── EVOLUTION TAB ── -->
           <template v-else-if="tab === 'evolution'">
-            <div v-if="evolution.length <= 1" class="evo-none">
-              This Pokémon does not evolve.
+            <div v-if="evolution.length <= 1" class="evo-empty">
+              <!-- This Pokémon does not evolve. -->
+              <Ghost :size="48" class="evo-empty-icon" />
+              <div class="evo-empty-title">No evolution data available</div>
+              <div class="evo-empty-sub">Detailed records of this Pokémon's evolution chain are currently unavailable.</div>
             </div>
             <div v-else class="evo-chain">
               <template v-for="(step, i) in evolution" :key="step.id">
@@ -462,7 +465,7 @@ const infoItems = computed(() => [
             <div v-if="encounters.length === 0" class="location-empty">
               <MapPin :size="48" class="location-empty-icon" />
               <div class="location-empty-title">No location data available</div>
-              <div class="location-empty-sub">This Pokémon hasn't been encountered in any game yet.</div>
+              <div class="location-empty-sub">No wild sightings have been documented for this Pokémon.</div>
             </div>
             
             <div v-else class="location-container">

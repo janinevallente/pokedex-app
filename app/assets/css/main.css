@@ -1567,12 +1567,32 @@ body>* {
   letter-spacing: 0;
 }
 
-.evo-none {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  color: var(--text-muted);
+.evo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
   text-align: center;
-  padding: 32px 0;
+  gap: 12px;
+}
+
+.evo-empty-icon {
+  opacity: 0.4;
+  margin-bottom: 8px;
+}
+
+.evo-empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.evo-empty-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .evo-chain {
