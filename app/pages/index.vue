@@ -85,11 +85,6 @@ const activeGenLabel = computed(() => {
   return g ? `${g.label} · ${g.sub}` : null
 })
 
-// const subtitleText = computed(() => {
-//   if (loading.value && filtered.value.length === 0) return 'Loading…'
-//   return `Showing ${filtered.value.length} of ${totalCount.value} Pokémon`
-// })
-
 // Utility function to capitalize first letter
 const capitalizeFirstLetter = (str: string): string => {
   if (!str) return str
@@ -250,15 +245,11 @@ onMounted(() => {
 
     <!-- Main -->
     <main class="main-content">
-      <!-- Initial loading skeleton -->
-      <div v-if="loading && filtered.length === 0" class="skeleton-grid">
-        <div
-          v-for="i in 20"
-          :key="i"
-          class="skeleton"
-          :style="{ height: '180px', animationDelay: `${i * 0.05}s` }"
-        />
-      </div>
+      <!-- Pokéball loader: initial load AND batch fetching (filter/search/page) -->
+      <PokeballLoader
+        v-if="loading || batchLoading"
+        :message="loading ? 'Loading Pokémon…' : 'Fetching data…'"
+      />
 
       <!-- Error state -->
       <div v-else-if="error" class="state-center">
@@ -267,8 +258,11 @@ onMounted(() => {
         <div class="state-sub">{{ error }}</div>
       </div>
 
-      <!-- Empty state -->
-      <div v-else-if="!loading && filtered.length === 0" class="state-center">
+      <!-- Empty state: only show after the full name list has loaded (allNames.length > 0) -->
+      <div
+        v-else-if="allNames.length > 0 && filtered.length === 0"
+        class="state-center"
+      >
         <div class="state-emoji">🔎</div>
         <div class="state-title">No Pokémon found</div>
         <div class="state-sub">Try a different search or filter</div>
