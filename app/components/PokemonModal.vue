@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TYPE_HEX, padId, getTypeEffectiveness } from '~/types/pokemon'
 import { usePokemonDetail } from '~/composables/usePokemonDetail'
-import { Shield, TriangleAlert, Volume2, MapPin } from '@lucide/vue'
+import { Shield, TriangleAlert, Volume2, MapPin, Ghost, Inbox } from '@lucide/vue'
 
 const props = defineProps<{
   pokemonId: number | null
@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const pokemonIdRef = computed(() => props.pokemonId)
-const { detail, species, evolution, loading, cryUrl, encounters } = usePokemonDetail(pokemonIdRef)
+const { detail, species, evolution, moves, movesLoading, loading, cryUrl, encounters } = usePokemonDetail(pokemonIdRef)
 
 type Tab = 'info' | 'stats' | 'moves' | 'evolution' | 'location'
 const tab = ref<Tab>('info')
@@ -415,25 +415,86 @@ const infoItems = computed(() => [
 
           <!-- ── MOVES TAB ── -->
           <template v-else-if="tab === 'moves'">
-            <div class="moves-count">{{ detail.moves.length }} moves available</div>
-            <div class="moves-grid">
-              <div
-                v-for="m in detail.moves.slice(0, 48)"
-                :key="m.move.name"
-                class="move-chip"
-              >
-                {{ m.move.name.replace(/-/g, ' ') }}
+
+            <!-- Loading -->
+            <div v-if="movesLoading" class="moves-loading">
+              <div class="moves-loading-dots">
+                <span /><span /><span />
               </div>
+              <div class="moves-loading-text">Loading move details…</div>
             </div>
-            <div v-if="detail.moves.length > 48" class="moves-more">
-              +{{ detail.moves.length - 48 }} more moves
+
+            <!-- No moves -->
+            <div v-else-if="moves.length === 0" class="moves-empty">
+              <Inbox :size="48" class="moves-empty-icon" />
+              <div class="moves-empty-title">No data available</div>
+              <div class="moves-empty-sub">This Pokémon has no recorded moves.</div>
             </div>
+
+            <!-- Moves table -->
+            <template v-else>
+              <div class="moves-summary">
+                {{ moves.length }} moves
+                <span class="moves-summary-hint">· sorted by level learned</span>
+              </div>
+              <div class="moves-table-wrapper">
+                <table class="moves-table">
+                  <thead>
+                    <tr>
+                      <th class="col-lv">Lv.</th>
+                      <th class="col-name">Move</th>
+                      <th class="col-type">Type</th>
+                      <th class="col-cat">Cat.</th>
+                      <th class="col-pow">Power</th>
+                      <th class="col-acc">Acc.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="m in moves"
+                      :key="m.name"
+                      class="move-row"
+                    >
+                      <td class="col-lv">
+                        <span v-if="m.learnMethod === 'level-up'" class="lv-badge">
+                          {{ m.levelLearnedAt === 0 ? '—' : m.levelLearnedAt }}
+                        </span>
+                        <span v-else class="learn-method-badge">
+                          {{ m.learnMethod === 'machine' ? 'TM' : m.learnMethod === 'egg' ? 'Egg' : m.learnMethod === 'tutor' ? 'Tutor' : capitalizeFirstLetter(m.learnMethod) }}
+                        </span>
+                      </td>
+                      <td class="col-name move-name-cell">
+                        {{ m.name.replace(/-/g, ' ').replace(/(^|\s)\w/g, (c: string) => c.toUpperCase()) }}
+                      </td>
+                      <td class="col-type">
+                        <span :class="['type-badge', `type-${m.type}`]">{{ m.type }}</span>
+                      </td>
+                      <td class="col-cat">
+                        <span :class="['damage-class', `damage-${m.damageClass}`]" :title="m.damageClass">
+                          {{ m.damageClass === 'physical' ? '⚔' : m.damageClass === 'special' ? '✦' : '○' }}
+                        </span>
+                      </td>
+                      <td class="col-pow">
+                        <span class="stat-val">{{ m.power ?? '—' }}</span>
+                      </td>
+                      <td class="col-acc">
+                        <span class="stat-val">{{ m.accuracy != null ? m.accuracy + '%' : '—' }}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+
           </template>
 
           <!-- ── EVOLUTION TAB ── -->
           <template v-else-if="tab === 'evolution'">
-            <div v-if="evolution.length <= 1" class="evo-none">
-              This Pokémon does not evolve.
+            <div v-if="evolution.length <= 1" class="evo-empty">
+              <!-- This Pokémon does not evolve. -->
+              <Inbox :size="48" class="evo-empty-icon" />
+              <div class="evo-empty-title">No data available</div>
+              <div class="evo-empty-sub">Detailed records of this Pokémon's evolution chain are currently unavailable.</div>
             </div>
             <div v-else class="evo-chain">
               <template v-for="(step, i) in evolution" :key="step.id">
@@ -460,9 +521,9 @@ const infoItems = computed(() => [
           <!-- ── LOCATION TAB ── -->
           <template v-else-if="tab === 'location'">
             <div v-if="encounters.length === 0" class="location-empty">
-              <MapPin :size="48" class="location-empty-icon" />
-              <div class="location-empty-title">No location data available</div>
-              <div class="location-empty-sub">This Pokémon hasn't been encountered in any game yet.</div>
+              <Inbox :size="48" class="location-empty-icon" />
+              <div class="location-empty-title">No data available</div>
+              <div class="location-empty-sub">No wild sightings have been documented for this Pokémon.</div>
             </div>
             
             <div v-else class="location-container">
