@@ -1379,41 +1379,177 @@ body>* {
 }
 
 /* Moves tab */
-.moves-count {
+/* ── Moves table ── */
+.moves-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 0;
+  gap: 14px;
+}
+
+.moves-loading-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.moves-loading-dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--red-primary);
+  animation: dot-bounce 1.2s infinite ease-in-out;
+}
+
+.moves-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.moves-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: scale(0.65); opacity: 0.35; }
+  40%            { transform: scale(1);    opacity: 1; }
+}
+
+.moves-loading-text {
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   color: var(--text-muted);
-  margin-bottom: 12px;
 }
 
-.moves-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+.moves-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 44.3px 24px;
+  text-align: center;
+  gap: 12px;
 }
 
-.move-chip {
-  padding: 7px 12px;
-  border-radius: 8px;
+.moves-empty-icon {
+  opacity: 0.4;
+  margin-bottom: 8px;
+}
+
+.moves-empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.moves-empty-sub {
   font-family: 'DM Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: capitalize;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.moves-summary {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.moves-summary-hint {
+  opacity: 0.6;
+}
+
+.moves-table-wrapper {
+  overflow-x: auto;
+}
+
+.moves-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+}
+
+.moves-table thead tr {
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
+
+.moves-table th {
+  padding: 9px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #84849a;
+  white-space: nowrap;
+}
+
+.moves-table td {
+  padding: 6px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+
+.move-row:last-child td {
+  border-bottom: none;
+}
+
+/* Column widths */
+.col-lv   { width: 56px; }
+.col-name { min-width: 130px; }
+.col-type { width: 82px; }
+.col-cat  { width: 44px; text-align: center; }
+.col-pow  { width: 56px; text-align: right; }
+.col-acc  { width: 56px; text-align: right; }
+
+/* Level badge (level-up moves) */
+.lv-badge {
+  display: inline-block;
+  min-width: 28px;
+  text-align: center;
+  padding: 2px 5px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
   background: var(--bg-elevated);
   color: var(--text-secondary);
   border: 1px solid var(--border);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.moves-more {
-  text-align: center;
-  margin-top: 12px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  color: var(--text-muted);
+/* TM / Egg / Tutor badge */
+.learn-method-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(80,140,255,0.14);
+  color: #7baff5;
+  border: 1px solid rgba(80,140,255,0.22);
 }
+
+.move-name-cell {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.damage-class {
+  display: inline-block;
+  width: 22px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.damage-physical { color: #f5a623; }
+.damage-special  { color: #bd4ae4; }
+.damage-status   { color: var(--text-muted); }
+
+.stat-val {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+
 
 /* Modal footer */
 .modal-footer {
@@ -1572,7 +1708,7 @@ body>* {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 36px 24px;
   text-align: center;
   gap: 12px;
 }
@@ -1963,7 +2099,7 @@ body>* {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 44.3px 24px;
   text-align: center;
   gap: 12px;
 }

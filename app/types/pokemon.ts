@@ -86,6 +86,26 @@ export function getVariantLabel(name: string): string | undefined {
   return undefined
 }
 
+/** Enriched move row for display in the moves table */
+export interface MoveEntry {
+  name: string
+  type: string
+  levelLearnedAt: number   // 0 = not level-up (TM/egg/tutor)
+  learnMethod: string      // 'level-up' | 'machine' | 'egg' | 'tutor'
+  power: number | null
+  accuracy: number | null
+  damageClass: string      // 'physical' | 'special' | 'status'
+}
+
+/** Shape returned by PokeAPI /move/:name */
+export interface MoveDetail {
+  name: string
+  type: { name: string }
+  power: number | null
+  accuracy: number | null
+  damage_class: { name: string }
+}
+
 export interface PokemonDetail {
   id: number
   name: string
@@ -103,7 +123,14 @@ export interface PokemonDetail {
       showdown?: { front_default: string }
     }
   }
-  moves: { move: { name: string } }[]
+  moves: {
+    move: { name: string; url: string }
+    version_group_details: {
+      level_learned_at: number
+      move_learn_method: { name: string }
+      version_group: { name: string }
+    }[]
+  }[]
   species: { url: string }
   cries?: {
     latest: string
