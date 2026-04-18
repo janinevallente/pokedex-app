@@ -285,7 +285,6 @@ const infoItems = computed(() => [
                 :alt="detail.name"
                 class="modal-sprite"
                 :style="spriteStyle"
-                @click="showBack = !showBack"
               />
             </div>
 
