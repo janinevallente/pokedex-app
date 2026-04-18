@@ -134,33 +134,3 @@ const variantBadgeClass = computed(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Subtle visual distinction for variant cards */
-.poke-card--variant {
-  opacity: 0.93;
-  border-top: 2px solid rgba(255, 255, 255, 0.18);
-}
-
-.variant-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 10;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 20px;
-  color: #fff;
-  white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-}
-
-.badge-mega     { background: linear-gradient(135deg, #6a11cb, #2575fc); }
-.badge-gmax     { background: linear-gradient(135deg, #ff0844, #ffb199); }
-.badge-primal   { background: linear-gradient(135deg, #f7971e, #ffd200); color: #222; }
-.badge-eternamax{ background: linear-gradient(135deg, #0f0c29, #302b63); }
-.badge-regional { background: linear-gradient(135deg, #11998e, #38ef7d); color: #111; }
-</style>
