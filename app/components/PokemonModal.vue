@@ -279,13 +279,16 @@ const infoItems = computed(() => [
                 @click="emit('next')"
               >→</button>
 
-              <img
-                v-if="sprite"
-                :src="sprite"
-                :alt="detail.name"
-                class="modal-sprite"
-                :style="spriteStyle"
-              />
+              <div>
+                <img
+                  v-if="sprite"
+                  :src="sprite"
+                  :alt="detail.name"
+                  class="modal-sprite"
+                  :style="spriteStyle"
+                />
+                <div v-else class="modal-sprite-placeholder">?</div>
+              </div>
             </div>
 
             <!-- Types + legendary badges -->
